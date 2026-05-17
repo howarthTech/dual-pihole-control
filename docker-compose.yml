@@ -1,0 +1,17 @@
+# docker-compose for dual-pihole-control backend
+# Usage (Windows 10 + Docker Desktop):
+#   docker compose up -d
+services:
+  backend:
+    build: .
+    container_name: dual-pihole-control
+    restart: unless-stopped
+    # Reads all configuration (token, Pi-hole URLs, passwords) from .env.
+    env_file:
+      - .env
+    # Publish the backend port to the Windows host so the extension can reach it.
+    ports:
+      - "${PORT:-8088}:${PORT:-8088}"
+    # The container reaches Pi-holes on the LAN via the host network stack.
+    # On Docker Desktop for Windows this works through the default bridge;
+    # use LAN IPs (not 127.0.0.1) for PIHOLE_*_BASE_URL.

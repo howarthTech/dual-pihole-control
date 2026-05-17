@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dual Pi-hole Control</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <header>
+    <h1>Dual Pi-hole Control</h1>
+    <span class="version">v0.1.0</span>
+  </header>
+
+  <!-- Per-server status -->
+  <section id="statusSection">
+    <div class="status-list" id="statusList">
+      <div class="status-row muted">Loading status&hellip;</div>
+    </div>
+  </section>
+
+  <!-- Action message (success / partial failure / error) -->
+  <div id="message" class="message hidden"></div>
+
+  <!-- Control buttons -->
+  <section class="controls">
+    <div class="btn-grid">
+      <button class="btn disable" data-seconds="30">Disable 30s</button>
+      <button class="btn disable" data-seconds="300">Disable 5m</button>
+      <button class="btn disable" data-seconds="600">Disable 10m</button>
+      <button class="btn disable" data-seconds="1800">Disable 30m</button>
+    </div>
+    <button class="btn enable" id="enableBtn">Enable Now</button>
+    <button class="btn refresh" id="refreshBtn">Refresh Status</button>
+  </section>
+
+  <!-- Settings (collapsible) -->
+  <section class="settings">
+    <button class="settings-toggle" id="settingsToggle">Settings &#9662;</button>
+    <div class="settings-body hidden" id="settingsBody">
+      <label for="backendUrl">Backend URL</label>
+      <input type="text" id="backendUrl" placeholder="http://192.168.1.50:8088" />
+
+      <label for="controlToken">Control Token</label>
+      <input type="password" id="controlToken" placeholder="CONTROL_TOKEN" />
+
+      <button class="btn save" id="saveSettingsBtn">Save Settings</button>
+    </div>
+  </section>
+
+  <script src="browserApi.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

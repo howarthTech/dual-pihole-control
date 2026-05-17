@@ -1,0 +1,33 @@
+{
+  "manifest_version": 3,
+  "name": "Dual Pi-hole Control",
+  "version": "0.1.0",
+  "description": "One-click disable/enable blocking on two Pi-hole servers via a local backend service.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "dual-pihole-control@local",
+      "strict_min_version": "115.0"
+    }
+  },
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "http://*/",
+    "https://*/"
+  ],
+  "content_security_policy": {
+    "comment": "Default MV3 CSP minus 'upgrade-insecure-requests' so the popup can call the plain-HTTP LAN backend. LAN/private use only.",
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
+  "icons": {
+    "48": "icon.svg",
+    "96": "icon.svg",
+    "128": "icon.svg"
+  },
+  "action": {
+    "default_title": "Dual Pi-hole Control",
+    "default_popup": "popup.html",
+    "default_icon": "icon.svg"
+  }
+}
