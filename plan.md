@@ -36,7 +36,8 @@ Browser extension  ──HTTP──▶  Backend (Docker)  ──HTTP──▶  P
 - [ ] Pi-hole v5 path is implemented but **untested** — needs verification
       against a real v5 server
 - [ ] Optional: auto-refresh stats on a timer; show blocklist size inline
-- [ ] Optional: package the extension for addons.mozilla.org
+- [ ] Submit the extension to addons.mozilla.org (tooling + guide are in place;
+      see `docs/PUBLISH-EXTENSION.md`)
 
 ## Deploying changes
 

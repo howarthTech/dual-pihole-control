@@ -13,3 +13,7 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Built extension packages
+dist/
+web-ext-artifacts/

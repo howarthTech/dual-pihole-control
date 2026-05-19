@@ -3,10 +3,15 @@
   "name": "Dual Pi-hole Control",
   "version": "0.1.0",
   "description": "One-click disable/enable blocking on two Pi-hole servers via a local backend service.",
+  "author": "Howarth Tech Solutions",
+  "homepage_url": "https://github.com/howarthTech/dual-pihole-control",
   "browser_specific_settings": {
     "gecko": {
-      "id": "dual-pihole-control@local",
-      "strict_min_version": "115.0"
+      "id": "dual-pihole-control@howarthtech",
+      "strict_min_version": "115.0",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
     }
   },
   "permissions": [
@@ -17,7 +22,6 @@
     "https://*/"
   ],
   "content_security_policy": {
-    "comment": "Default MV3 CSP minus 'upgrade-insecure-requests' so the popup can call the plain-HTTP LAN backend. LAN/private use only.",
     "extension_pages": "script-src 'self'; object-src 'self'"
   },
   "icons": {

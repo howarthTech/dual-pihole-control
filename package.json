@@ -6,7 +6,9 @@
   "type": "commonjs",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "node --watch src/server.js"
+    "dev": "node --watch src/server.js",
+    "ext:lint": "web-ext lint --source-dir extension/firefox",
+    "ext:build": "web-ext build --source-dir extension/firefox --artifacts-dir dist --overwrite-dest"
   },
   "engines": {
     "node": ">=18"
@@ -17,6 +19,9 @@
     "dotenv": "^16.4.5",
     "express": "^4.21.0",
     "express-rate-limit": "^7.4.0"
+  },
+  "devDependencies": {
+    "web-ext": "^8.3.0"
   },
   "license": "MIT"
 }

@@ -5,6 +5,18 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- `web-ext` tooling and `ext:lint` / `ext:build` npm scripts for packaging
+  the Firefox extension.
+- `docs/PUBLISH-EXTENSION.md` — guide for publishing the extension to
+  addons.mozilla.org as a listed add-on.
+
+### Changed
+- Extension `gecko.id` set to `dual-pihole-control@howarthtech`; added
+  `author` and `homepage_url` to the manifest for AMO submission.
+
 ## [0.1.0] - 2026-05-17
 
 ### Added

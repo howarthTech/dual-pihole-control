@@ -17,6 +17,8 @@ admin dashboards.
 - **[QUICKSTART.md](QUICKSTART.md)** — fastest path to a working setup.
 - **[docs/INSTALL.md](docs/INSTALL.md)** — detailed install (Windows, Linux, macOS).
 - **[docs/USAGE.md](docs/USAGE.md)** — using the extension day to day.
+- **[docs/PUBLISH-EXTENSION.md](docs/PUBLISH-EXTENSION.md)** — packaging and
+  publishing the extension to addons.mozilla.org.
 - **[FAQ.md](FAQ.md)** — common questions.
 - This README — full reference, API, troubleshooting, security.
 
