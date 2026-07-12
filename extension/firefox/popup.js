@@ -385,6 +385,12 @@ function init() {
     els.tokenVisibilityBtn.textContent = hidden ? 'Hide' : 'Show';
   });
 
+  // Support link: popups can't reliably follow plain links, so open a tab.
+  document.getElementById('coffeeLink').addEventListener('click', (e) => {
+    e.preventDefault();
+    browserApi.openTab(e.currentTarget.href).then(() => window.close());
+  });
+
   loadSettings().then(refreshStatus);
 }
 

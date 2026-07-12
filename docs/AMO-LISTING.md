@@ -72,6 +72,11 @@ pi-hole, pihole, dns, ad blocking, network, self-hosted
 | Homepage | https://github.com/howarthTech/dual-pihole-control |
 | Support site | https://github.com/howarthTech/dual-pihole-control/issues |
 | Support email | (your contact email) |
+| Contributions URL | https://buymeacoffee.com/howarthtech |
+
+Buy Me a Coffee is one of AMO's supported contribution providers, so the
+listing can show a "Contribute" button pointing at the URL above (set it in
+the Developer Hub under Manage Authors & License → contributions).
 
 ## License
 

@@ -26,5 +26,11 @@
     },
   };
 
-  global.browserApi = { raw: api, storage };
+  // Open a URL in a new tab. Extension popups cannot rely on plain links,
+  // so route through tabs.create (works in both Firefox and Chrome MV3).
+  function openTab(url) {
+    return Promise.resolve(api.tabs.create({ url }));
+  }
+
+  global.browserApi = { raw: api, storage, openTab };
 })(window);
