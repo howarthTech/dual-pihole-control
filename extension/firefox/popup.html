@@ -7,8 +7,11 @@
 </head>
 <body>
   <header>
-    <h1>Dual Pi-hole Control</h1>
-    <span class="version">v0.1.0</span>
+    <div class="header-title">
+      <img src="icon.svg" alt="" class="logo" />
+      <h1>Dual Pi-hole Control</h1>
+    </div>
+    <span class="version">v0.2.0</span>
   </header>
 
   <!-- Per-server status -->
@@ -16,6 +19,7 @@
     <div class="status-list" id="statusList">
       <div class="status-row muted">Loading status&hellip;</div>
     </div>
+    <div class="last-updated" id="lastUpdated"></div>
   </section>
 
   <!-- Action message (success / partial failure / error) -->
@@ -38,10 +42,15 @@
     <button class="settings-toggle" id="settingsToggle">Settings &#9662;</button>
     <div class="settings-body hidden" id="settingsBody">
       <label for="backendUrl">Backend URL</label>
-      <input type="text" id="backendUrl" placeholder="http://192.168.1.50:8088" />
+      <input type="text" id="backendUrl" placeholder="http://192.168.1.50:8088"
+             autocomplete="off" spellcheck="false" />
 
       <label for="controlToken">Control Token</label>
-      <input type="password" id="controlToken" placeholder="CONTROL_TOKEN" />
+      <div class="token-row">
+        <input type="password" id="controlToken" placeholder="CONTROL_TOKEN"
+               autocomplete="off" spellcheck="false" />
+        <button class="btn ghost" id="tokenVisibilityBtn" type="button">Show</button>
+      </div>
 
       <button class="btn save" id="saveSettingsBtn">Save Settings</button>
     </div>

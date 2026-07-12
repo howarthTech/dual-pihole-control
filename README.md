@@ -1,6 +1,6 @@
 # dual-pihole-control
 
-**Version: v0.1.0**
+**Version: v0.2.0**
 
 One-click control of **two Pi-hole servers at once** from a Firefox browser
 extension. Click a button in your browser to disable blocking on both your
