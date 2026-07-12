@@ -1,6 +1,6 @@
 # dual-pihole-control
 
-**Version: v0.3.0**
+**Version: v0.4.0**
 
 One-click control of **all your Pi-hole servers at once** — one, two, or many —
 from a Firefox browser extension. Click a button in your browser to disable
@@ -22,29 +22,45 @@ admin dashboard separately.
 - **[FAQ.md](FAQ.md)** — common questions.
 - This README — full reference, API, troubleshooting, security.
 
-## How it works
+## How it works — two modes
+
+**Direct mode (default — no backend, 2-minute setup):**
 
 ```
-Firefox extension  ──HTTP──▶  Backend (Docker, Windows 10)  ──HTTP──▶  Pi-hole #1
-   (popup UI)                  Node.js + Express                       Pi-hole #2
+Firefox extension  ──HTTP──▶  Pi-hole #1, #2, ... (v6 API)
+   (popup UI)
 ```
 
-- The **browser extension** stores only the **backend URL** and a **control
-  token**. It never sees Pi-hole passwords.
-- The **backend service** holds the Pi-hole passwords (in `.env`), authenticates
-  to each Pi-hole, and calls the official Pi-hole API.
-- Designed for **LAN / private use only**. Do **not** expose the backend to the
-  public internet.
+The extension talks to each Pi-hole's v6 REST API itself. Add your Pi-holes
+(URL + password) in the popup's Settings. **Recommended:** create a Pi-hole
+**app password** (Settings → Web Interface / API in the Pi-hole admin UI)
+instead of storing your real admin password — it can be revoked anytime.
+
+**Backend mode (advanced — credentials stay out of the browser):**
+
+```
+Firefox extension  ──HTTP──▶  Backend (Docker)  ──HTTP──▶  Pi-hole #1, #2, ...
+   (popup UI)                  Node.js + Express
+```
+
+A small self-hosted service holds the Pi-hole passwords (in `.env`); the
+extension stores only the backend URL and a control token. Use this if you
+don't want any Pi-hole credential in browser storage, or if you have a
+Pi-hole v5 server (direct mode is v6-only).
+
+Either way: designed for **LAN / private use only**. Do **not** expose
+anything here to the public internet.
 
 ## Architecture notes
 
 - **Pi-hole v6 REST API** is the primary target (`/api/auth`,
-  `/api/dns/blocking`). A compatibility layer in `src/piholeClient.js` leaves
-  room for Pi-hole v5 (set `PIHOLE_<n>_API_VERSION=5`).
+  `/api/dns/blocking`, `/api/stats/summary`).
+- Direct mode logic lives in `extension/firefox/piholeDirect.js`; the backend
+  equivalent is `src/piholeClient.js` (which also has a v5 compatibility path:
+  set `PIHOLE_<n>_API_VERSION=5`).
 - The extension uses **Manifest V3** and a `browserApi.js` wrapper so **Chrome
   support can be added later** with minimal changes (mainly a manifest tweak).
-- More than two Pi-holes are supported — just add `PIHOLE_3_*`, `PIHOLE_4_*`,
-  etc. to `.env`.
+- Any number of Pi-holes is supported in both modes.
 
 ## Project layout
 
@@ -56,7 +72,9 @@ dual-pihole-control/
 ├── package.json
 ├── .env.example
 ├── .gitignore
-├── src/
+├── .github/workflows/
+│   └── docker-publish.yml   Publishes the backend image to ghcr.io
+├── src/                     Backend service (backend mode only)
 │   ├── server.js            Express app entry point
 │   ├── config.js            Loads/validates env vars
 │   ├── piholeClient.js      PiHoleClient class (v6 + v5 compat)
@@ -70,21 +88,41 @@ dual-pihole-control/
         ├── popup.html
         ├── popup.js
         ├── popup.css
+        ├── piholeDirect.js  Direct-mode Pi-hole v6 client
         └── browserApi.js    Cross-browser API wrapper
 ```
 
 ---
 
-## Setup on Windows 10 (Docker Desktop)
+## Setup — Direct mode (recommended)
 
-> Requires **Docker Desktop for Windows** installed and running.
+No Docker, no server — just the extension and your Pi-hole(s).
 
-### 1. Create the project folder
+1. **(Recommended) Create an app password on each Pi-hole:** admin UI →
+   Settings → Web Interface / API → **App password**. Copy it.
+2. **Load the extension** (see "Load the Firefox extension" below).
+3. Open the popup → **Settings** → mode **Direct** (the default).
+4. Fill in each Pi-hole's **URL** (e.g. `http://192.168.1.10`) and **app
+   password**. Click **+ Add Pi-hole** for more.
+5. **Save Settings** — status appears immediately. Done.
 
-Place all the files from this repository in a folder, for example:
+> Direct mode requires **Pi-hole v6**. For v5 servers, use backend mode.
+
+---
+
+## Setup — Backend mode (Docker)
+
+> Use this if you want Pi-hole credentials kept out of the browser, or for
+> Pi-hole v5. Requires Docker (Desktop on Windows/macOS, Engine on Linux).
+
+### 1. Get the config files
+
+The prebuilt image means you only need two files — `docker-compose.yml` and
+`.env.example` — either by cloning the repo or downloading them:
 
 ```
-C:\Users\You\dual-pihole-control
+git clone https://github.com/howarthTech/dual-pihole-control.git
+cd dual-pihole-control
 ```
 
 ### 2. Copy the env file
@@ -105,9 +143,9 @@ Open `.env` in a text editor and set:
   [Convert]::ToBase64String((1..32 | ForEach-Object {Get-Random -Max 256}))
   ```
 
-- `PIHOLE_1_BASE_URL` / `PIHOLE_1_PASSWORD` — your Primary Pi-hole's LAN IP
+- `PIHOLE_1_BASE_URL` / `PIHOLE_1_PASSWORD` — your Pi-hole's LAN IP
   (e.g. `http://192.168.1.10`) and admin password.
-- `PIHOLE_2_BASE_URL` / `PIHOLE_2_PASSWORD` — your Secondary Pi-hole.
+- More Pi-holes? Uncomment the `PIHOLE_2_*` block (and add `PIHOLE_3_*`, ...).
 
 > Use real **LAN IP addresses**, not `127.0.0.1` — the backend runs inside a
 > container and `127.0.0.1` would point at the container itself.
@@ -118,7 +156,15 @@ Open `.env` in a text editor and set:
 docker compose up -d
 ```
 
-This builds the image and starts the `dual-pihole-control` container.
+This pulls the prebuilt image from `ghcr.io/howarthtech/dual-pihole-control`
+and starts the container. (To build from source instead, swap the `image:`
+line for `build: .` in `docker-compose.yml`.) No compose file at all? A plain
+`docker run` works too:
+
+```powershell
+docker run -d --name dual-pihole-control --restart unless-stopped `
+  --env-file .env -p 8088:8088 ghcr.io/howarthtech/dual-pihole-control:latest
+```
 
 ### 5. Test backend health
 
@@ -162,9 +208,9 @@ curl -X POST http://localhost:8088/api/enable `
 
 Click the extension's toolbar icon to open the popup, then:
 
-1. Click **Settings**.
+1. Click **Settings** and choose mode **Backend service**.
 2. Set **Backend URL** to your server, e.g. `http://192.168.1.50:8088`
-   (use the Windows server's LAN IP, not `localhost`, if you use the extension
+   (use the server's LAN IP, not `localhost`, if you use the extension
    from another machine).
 3. Set **Control Token** to the same `CONTROL_TOKEN` from `.env`.
 4. Click **Save Settings**.
@@ -214,6 +260,17 @@ One failing Pi-hole never blocks the other — requests use
 ---
 
 ## Troubleshooting
+
+### Direct mode: "Cannot reach Pi-hole"
+- Confirm the Pi-hole URL in Settings uses the LAN IP and correct scheme
+  (`http://` for most LAN Pi-holes).
+- Confirm the Pi-hole is **v6** (`http://<pihole-ip>/api/docs` should load).
+  v5 servers need backend mode.
+
+### Direct mode: "Authentication failed"
+- Re-enter the password in Settings. If you use an **app password**, make
+  sure it wasn't revoked in the Pi-hole admin UI.
+- A Pi-hole with no web password set: leave the password field blank.
 
 ### Backend cannot reach Pi-hole
 - `/api/status` shows `"error": "Connection refused."` or `"timed out"`.
@@ -280,11 +337,14 @@ docker compose up -d --build
 
 ## Security notes
 
-- Pi-hole passwords live **only** in the backend `.env` file (git-ignored).
-- The extension stores only the backend URL and control token.
-- All control endpoints require a Bearer token, compared in constant time.
-- CORS is restricted to configured origins.
-- Rate limiting guards against accidental repeated disable clicks.
+- **Direct mode** stores Pi-hole credentials in the browser's local extension
+  storage. Use a Pi-hole **app password** (revocable, scoped to the API) so
+  your real admin password is never stored.
+- **Backend mode** keeps Pi-hole passwords **only** in the backend `.env`
+  file (git-ignored); the extension stores just the backend URL and control
+  token. Control endpoints require a Bearer token (constant-time compare),
+  CORS is restricted, and rate limiting guards against accidental spam.
+- Nothing is ever sent to the developer or any third party in either mode.
 - Passwords are never written to logs, API responses, or the browser console.
 - **LAN / private use only.** Do not port-forward or expose this publicly.
 

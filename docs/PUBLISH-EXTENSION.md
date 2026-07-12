@@ -55,25 +55,23 @@ Have these ready before you start the submission form:
 | Field | Suggested content |
 |-------|-------------------|
 | Name | Dual Pi-hole Control |
-| Summary | One-click disable/enable of blocking on two Pi-hole servers via a local backend. |
-| Description | Explain the backend requirement clearly (see note below). |
+| Summary | One-click disable/enable of blocking on all your Pi-hole servers — no companion software needed. |
+| Description | See the paste-ready copy in `AMO-LISTING.md`. |
 | Category | Privacy & Security |
 | Screenshots | Use `docs/images/popup.png` and any others you capture. |
 | Homepage / Support | The GitHub repository URL. |
 | License | MIT (matches `LICENSE`). |
 
-**Important for the description:** make it obvious the extension is **not
-standalone** — it requires the companion backend service from this repository
-running on the user's LAN. Reviewers and users should not expect it to work on
-its own.
+Full paste-ready listing copy lives in [`AMO-LISTING.md`](AMO-LISTING.md).
 
 ## 5. Data collection disclosure
 
 AMO asks what data the add-on collects. For this extension:
 
-- It stores the **backend URL** and **control token** in the browser's local
-  extension storage (`storage.local`).
-- It sends those only to the user's own backend, on the user's own network.
+- It stores user-provided configuration in the browser's local extension
+  storage (`storage.local`): Pi-hole URLs and passwords (direct mode) or the
+  backend URL and control token (backend mode).
+- It sends those only to the user's own servers, on the user's own network.
 - It does **not** use analytics, telemetry, or any third-party service.
 
 Disclose it as: stores user-provided configuration locally; no data sent to
@@ -81,15 +79,10 @@ the developer or third parties.
 
 ## 6. Reviewer notes (optional, but speeds review)
 
-When the form offers a "Notes for reviewers" field, explain the broad
-permissions so a human reviewer understands them:
-
-> This extension is the client half of a self-hosted tool. The backend service
-> (open source, in the same repository) runs on the user's LAN. The user types
-> their own backend URL into the extension settings, so the extension cannot
-> know the host in advance — hence the broad `host_permissions`. The CSP omits
-> `upgrade-insecure-requests` because LAN backends are typically plain HTTP.
-> All credentials stay on the user's machine; nothing is sent to the developer.
+When the form offers a "Notes for reviewers" field, paste the reviewer note
+from [`AMO-LISTING.md`](AMO-LISTING.md) — it explains the broad host
+permissions (user-typed server addresses can't be known in advance) and the
+CSP override for plain-HTTP LAN servers.
 
 ## 7. Releasing updates
 

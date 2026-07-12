@@ -5,6 +5,26 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.4.0] - 2026-07-12
+
+### Added
+- **Direct mode (new default):** the extension now talks to the Pi-hole v6
+  REST API itself — no backend required. Add any number of Pi-holes (name,
+  URL, password) right in the popup's Settings. Pi-hole **app passwords**
+  recommended. Existing backend users are migrated to backend mode
+  automatically.
+- **Prebuilt Docker image:** the backend is published to
+  `ghcr.io/howarthtech/dual-pihole-control` by GitHub Actions on every push
+  to master; `docker-compose.yml` now uses it by default (build-from-source
+  remains available).
+- Connection-mode picker (Direct / Backend service) in Settings, with a
+  per-Pi-hole add/remove editor for direct mode.
+
+### Changed
+- Docs rewritten for the two-mode world: README, QUICKSTART, INSTALL, USAGE,
+  FAQ, SECURITY, and the AMO listing copy (the extension no longer "requires"
+  a backend).
+
 ## [0.3.0] - 2026-07-12
 
 ### Changed

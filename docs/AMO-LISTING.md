@@ -16,7 +16,7 @@ Dual Pi-hole Control
 Short one-liner shown in search results (keep under ~250 characters).
 
 ```
-Disable or re-enable ad-blocking on two or more Pi-hole servers at once, with a single click. Requires the free, open-source companion backend service running on your local network.
+Disable or re-enable ad-blocking on all your Pi-hole servers at once, with a single click. Works out of the box with Pi-hole v6 — no server or companion software required.
 ```
 
 ## Description
@@ -24,33 +24,35 @@ Disable or re-enable ad-blocking on two or more Pi-hole servers at once, with a 
 Longer description for the listing page.
 
 ```
-Dual Pi-hole Control lets you disable or enable blocking on multiple Pi-hole
-servers at the same time, straight from your Firefox toolbar — no more logging
-into each Pi-hole admin dashboard separately.
+Dual Pi-hole Control lets you disable or enable blocking on one, two, or many
+Pi-hole servers at the same time, straight from your Firefox toolbar — no
+more logging into each Pi-hole admin dashboard separately.
 
-IMPORTANT: This extension is the client half of a self-hosted tool. It does
-NOT work on its own. You must run the companion backend service (free and
-open source) on a machine on your local network. The backend handles
-authentication to your Pi-holes; full setup instructions are in the project
-repository.
+Setup takes about two minutes: add each Pi-hole's address and password in the
+popup's settings and you're done. Works with Pi-hole v6. We recommend using a
+Pi-hole "app password" (created in the Pi-hole admin UI) instead of your
+admin password — it can be revoked at any time.
 
 Features:
 - One click to disable blocking on all your Pi-holes for 30 seconds, 5, 10,
-  or 30 minutes.
+  or 30 minutes — with a live countdown until blocking resumes.
 - One click to re-enable blocking everywhere.
-- Live status and basic blocking statistics for each Pi-hole.
+- Live status and blocking statistics for each Pi-hole.
 - Clear per-server results, including partial failures.
+- Add as many Pi-holes as you like.
+
+Advanced: an optional self-hosted backend mode is available for users who
+prefer to keep Pi-hole credentials out of the browser entirely (and for
+Pi-hole v5). See the project repository for details.
 
 Privacy and security:
-- Your Pi-hole passwords are NEVER stored in the browser. They live only in
-  the backend service's configuration on your own network.
-- The extension stores only your backend URL and an access token, kept in
-  local browser storage.
-- No analytics, no telemetry, nothing sent to the developer or any third
-  party.
+- Everything stays on your own network. Nothing is sent to the developer or
+  any third party — no analytics, no telemetry.
+- Credentials are stored only in local browser storage (direct mode) or on
+  your own server (backend mode).
 
-This is designed for private home/LAN use. Source code, backend, and setup
-guide: https://github.com/howarthTech/dual-pihole-control
+Designed for private home/LAN use. Source code and full documentation:
+https://github.com/howarthTech/dual-pihole-control
 ```
 
 ## Category
@@ -103,21 +105,23 @@ Upload from `docs/images/`. Suggested captions:
 
 | Image | Caption |
 |-------|---------|
-| `popup.png` | The popup showing both Pi-holes blocking, with statistics. |
-| `popup-disabled.png` (optional) | Blocking disabled on both Pi-holes with a countdown timer. |
-| `settings.png` (optional) | Configuring the backend URL and access token. |
+| `popup.png` | The popup showing your Pi-holes blocking, with statistics. |
+| `popup-disabled.png` (optional) | Blocking disabled with a live countdown timer. |
+| `settings.png` (optional) | Adding Pi-holes in the settings panel. |
 
 ## Notes for reviewers
 
 Paste this into the "Notes for reviewers" field to speed up review:
 
 ```
-This extension is the client half of a self-hosted tool. The backend service
-(open source, same repository: https://github.com/howarthTech/dual-pihole-control)
-runs on the user's local network. The user types their own backend URL into
-the extension settings, so the extension cannot know the host in advance —
-this is why it requests broad host permissions. The content security policy
-omits 'upgrade-insecure-requests' because LAN backend services are typically
-plain HTTP. All credentials stay on the user's machine; nothing is transmitted
-to the developer or any third party.
+This extension controls the user's own self-hosted Pi-hole DNS servers on
+their local network. In the default (direct) mode it calls each Pi-hole's
+official v6 REST API; in an optional advanced mode it calls a self-hosted
+open-source backend from the same repository
+(https://github.com/howarthTech/dual-pihole-control). In both cases the user
+types their own server addresses into the settings, so the hosts cannot be
+known in advance — this is why broad host permissions are requested. The
+content security policy omits 'upgrade-insecure-requests' because LAN servers
+are typically plain HTTP. All credentials stay on the user's machine; nothing
+is transmitted to the developer or any third party.
 ```

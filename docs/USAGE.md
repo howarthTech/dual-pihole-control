@@ -16,8 +16,8 @@ Each Pi-hole has a status row with a colored badge:
 | Badge | Meaning |
 |-------|---------|
 | **Blocking** (green) | Ad/tracker blocking is active. |
-| **Disabled (5m)** (orange) | Blocking is off; the timer shows time remaining. |
-| **Error** (red) | The backend could not reach or authenticate to that Pi-hole. Hover the badge to see why. |
+| **Disabled · 4m 32s** (orange) | Blocking is off; the live countdown shows time remaining. When it reaches zero the badge flips back to **Blocking** automatically. |
+| **Error** (red) | That Pi-hole could not be reached or authenticated. The reason is shown under the row. |
 
 Below each row is a **statistics line**, for example:
 
@@ -30,10 +30,11 @@ counts. Hover it to see the blocklist size.
 
 ## Buttons
 
-- **Disable 30s / 5m / 10m / 30m** — turns off blocking on *both* Pi-holes for
-  that duration. Blocking re-enables automatically when the timer expires.
-- **Enable Now** — turns blocking back on immediately and permanently on both.
-- **Refresh Status** — re-queries both Pi-holes and updates the display.
+- **Disable 30s / 5m / 10m / 30m** — turns off blocking on *all* configured
+  Pi-holes for that duration. Blocking re-enables automatically when the
+  timer expires.
+- **Enable Now** — turns blocking back on immediately and permanently on all.
+- **Refresh Status** — re-queries every Pi-hole and updates the display.
 
 ## Understanding result messages
 
@@ -47,11 +48,26 @@ After an action, a banner reports what happened:
 A partial failure means the working Pi-hole was still changed — the action is
 not all-or-nothing.
 
-## Changing settings
+## Settings
 
-Click **Settings** in the popup to update the **Backend URL** or
-**Control Token**. Click **Save Settings** to store them. Settings are kept in
-the browser's local extension storage.
+Click **Settings** in the popup. First choose a **connection mode**:
+
+**Direct** (default) — the extension talks to your Pi-holes itself:
+- Each Pi-hole is a block with a **Name**, **URL**, and **Password**.
+- **+ Add Pi-hole** adds another block; **Remove** deletes one.
+- Use a Pi-hole **app password** (Pi-hole admin → Settings → Web Interface /
+  API) rather than your admin password. Leave the password blank if the
+  Pi-hole has none.
+- Direct mode requires Pi-hole v6.
+
+**Backend service** — the extension talks to your self-hosted backend:
+- **Backend URL** — e.g. `http://192.168.1.50:8088`.
+- **Control Token** — must match `CONTROL_TOKEN` in the backend's `.env`;
+  the **Show** button reveals it to check for typos.
+
+Click **Save Settings** to store either mode. Settings are kept in the
+browser's local extension storage. Pressing Enter in the backend fields also
+saves.
 
 ## After restarting Firefox
 
@@ -62,11 +78,13 @@ removed when Firefox restarts. Re-load it the same way:
 
 ## Common situations
 
-- **All servers show Error** — the backend is unreachable. Check the Backend
-  URL and that the backend container is running.
-- **"Unauthorized"** — the Control Token does not match the backend's
-  `CONTROL_TOKEN`.
-- **One server shows Error** — that Pi-hole's address or password is wrong, or
-  it is offline. Hover the badge for the exact reason.
+- **One server shows Error** — that Pi-hole's address or password is wrong,
+  or it is offline. The reason is shown under the row.
+- **Backend mode: everything fails at once** — the backend is unreachable.
+  Check the Backend URL and that the container is running.
+- **Backend mode: "Unauthorized"** — the Control Token does not match the
+  backend's `CONTROL_TOKEN`.
+- **Direct mode: "Authentication failed"** — re-enter the password; if using
+  an app password, confirm it wasn't revoked in the Pi-hole admin UI.
 
 See the **Troubleshooting** section of [../README.md](../README.md) for fixes.

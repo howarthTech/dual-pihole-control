@@ -1,14 +1,17 @@
 // ---------------------------------------------------------------------------
 // Popup logic for Dual Pi-hole Control.
 //
-// The extension stores ONLY the backend URL and control token (in
-// browser.storage.local). It never sees or stores Pi-hole passwords - the
-// backend handles all Pi-hole authentication.
+// Two connection modes:
+//  - direct:  the extension talks to each Pi-hole's v6 API itself
+//             (piholeDirect.js). Pi-holes are managed in Settings.
+//  - backend: the extension talks to the companion backend service, which
+//             holds the Pi-hole passwords. Only the backend URL and control
+//             token are stored in the browser.
 // ---------------------------------------------------------------------------
 
 'use strict';
 
-const SETTINGS_KEYS = ['backendUrl', 'controlToken'];
+const SETTINGS_KEYS = ['mode', 'piholes', 'backendUrl', 'controlToken'];
 const REQUEST_TIMEOUT_MS = 8000;
 
 // Cached DOM references.
@@ -20,13 +23,19 @@ const els = {
   refreshBtn: document.getElementById('refreshBtn'),
   settingsToggle: document.getElementById('settingsToggle'),
   settingsBody: document.getElementById('settingsBody'),
+  modeDirect: document.getElementById('modeDirect'),
+  modeBackend: document.getElementById('modeBackend'),
+  directSettings: document.getElementById('directSettings'),
+  backendSettings: document.getElementById('backendSettings'),
+  piholeList: document.getElementById('piholeList'),
+  addPiholeBtn: document.getElementById('addPiholeBtn'),
   backendUrl: document.getElementById('backendUrl'),
   controlToken: document.getElementById('controlToken'),
   tokenVisibilityBtn: document.getElementById('tokenVisibilityBtn'),
   saveSettingsBtn: document.getElementById('saveSettingsBtn'),
 };
 
-let settings = { backendUrl: '', controlToken: '' };
+let settings = { mode: 'direct', piholes: [], backendUrl: '', controlToken: '' };
 
 // Last status snapshot, used for the live countdown on disable timers.
 let lastResults = null;
@@ -37,65 +46,191 @@ let countdownTimer = null;
 
 async function loadSettings() {
   const stored = await browserApi.storage.get(SETTINGS_KEYS);
+  settings.piholes = Array.isArray(stored.piholes) ? stored.piholes : [];
   settings.backendUrl = stored.backendUrl || '';
   settings.controlToken = stored.controlToken || '';
-  els.backendUrl.value = settings.backendUrl;
-  els.controlToken.value = settings.controlToken;
+
+  // Mode migration: users upgrading from <= v0.3.0 have a backend configured
+  // but no stored mode - keep them on backend mode. Fresh installs get direct.
+  if (stored.mode === 'direct' || stored.mode === 'backend') {
+    settings.mode = stored.mode;
+  } else {
+    settings.mode = settings.backendUrl && settings.controlToken ? 'backend' : 'direct';
+  }
+
+  renderSettingsForm();
 }
 
-// Normalize and validate the backend URL. Returns the cleaned URL, or null
-// (after showing a message) when it cannot be salvaged.
-function normalizeBackendUrl(raw) {
+function renderSettingsForm() {
+  (settings.mode === 'direct' ? els.modeDirect : els.modeBackend).checked = true;
+  applyModeVisibility();
+
+  els.backendUrl.value = settings.backendUrl;
+  els.controlToken.value = settings.controlToken;
+
+  renderPiholeRows(settings.piholes.length ? settings.piholes : [emptyPihole()]);
+}
+
+function applyModeVisibility() {
+  const direct = els.modeDirect.checked;
+  els.directSettings.classList.toggle('hidden', !direct);
+  els.backendSettings.classList.toggle('hidden', direct);
+}
+
+function emptyPihole() {
+  return { name: '', baseUrl: '', password: '' };
+}
+
+// Render one editable block per Pi-hole in the settings panel.
+function renderPiholeRows(piholes) {
+  els.piholeList.innerHTML = '';
+  piholes.forEach((p, i) => els.piholeList.appendChild(buildPiholeRow(p, i)));
+  renumberPiholeRows();
+}
+
+function buildPiholeRow(p) {
+  const row = document.createElement('div');
+  row.className = 'pihole-row';
+
+  const head = document.createElement('div');
+  head.className = 'pihole-row-head';
+  const title = document.createElement('span');
+  title.className = 'pihole-row-title';
+  const removeBtn = document.createElement('button');
+  removeBtn.type = 'button';
+  removeBtn.className = 'remove-btn';
+  removeBtn.textContent = 'Remove';
+  removeBtn.addEventListener('click', () => {
+    row.remove();
+    if (!els.piholeList.children.length) {
+      els.piholeList.appendChild(buildPiholeRow(emptyPihole()));
+    }
+    renumberPiholeRows();
+  });
+  head.appendChild(title);
+  head.appendChild(removeBtn);
+  row.appendChild(head);
+
+  const name = document.createElement('input');
+  name.type = 'text';
+  name.placeholder = 'Name (e.g. Primary)';
+  name.autocomplete = 'off';
+  name.spellcheck = false;
+  name.value = p.name || '';
+  name.className = 'ph-name';
+
+  const url = document.createElement('input');
+  url.type = 'text';
+  url.placeholder = 'http://192.168.1.10';
+  url.autocomplete = 'off';
+  url.spellcheck = false;
+  url.value = p.baseUrl || '';
+  url.className = 'ph-url';
+
+  const pass = document.createElement('input');
+  pass.type = 'password';
+  pass.placeholder = 'App password (blank if none set)';
+  pass.autocomplete = 'off';
+  pass.value = p.password || '';
+  pass.className = 'ph-pass';
+
+  row.appendChild(name);
+  row.appendChild(url);
+  row.appendChild(pass);
+  return row;
+}
+
+function renumberPiholeRows() {
+  [...els.piholeList.querySelectorAll('.pihole-row-title')].forEach((t, i) => {
+    t.textContent = `Pi-hole ${i + 1}`;
+  });
+}
+
+// Normalize and validate a URL. Returns the cleaned URL or null after
+// showing an error message.
+function normalizeUrl(raw, what) {
   let url = raw.trim().replace(/\/+$/, '');
-  if (!url) {
-    showMessage('fail', 'Enter the backend URL (e.g. http://192.168.1.50:8088).');
-    return null;
-  }
-  // Forgive a missing scheme: "192.168.1.50:8088" -> "http://192.168.1.50:8088".
-  if (!/^https?:\/\//i.test(url)) {
-    url = `http://${url}`;
-  }
+  if (!url) return null;
+  if (!/^https?:\/\//i.test(url)) url = `http://${url}`;
   try {
     new URL(url);
   } catch (e) {
-    showMessage('fail', 'That backend URL does not look valid. Example: http://192.168.1.50:8088');
-    return null;
+    showMessage('fail', `That ${what} URL does not look valid: ${raw.trim()}`);
+    return undefined; // distinct from null (= empty)
   }
   return url;
 }
 
 async function saveSettings() {
-  const url = normalizeBackendUrl(els.backendUrl.value);
-  if (!url) return;
+  const mode = els.modeDirect.checked ? 'direct' : 'backend';
 
-  const token = els.controlToken.value.trim();
-  if (!token) {
-    showMessage('fail', 'Enter the control token (CONTROL_TOKEN from the backend .env).');
-    return;
+  if (mode === 'direct') {
+    const piholes = [];
+    for (const row of els.piholeList.querySelectorAll('.pihole-row')) {
+      const name = row.querySelector('.ph-name').value.trim();
+      const rawUrl = row.querySelector('.ph-url').value;
+      const password = row.querySelector('.ph-pass').value;
+      if (!name && !rawUrl.trim() && !password) continue; // fully empty row
+      const baseUrl = normalizeUrl(rawUrl, 'Pi-hole');
+      if (baseUrl === undefined) return; // invalid URL, message already shown
+      if (baseUrl === null) {
+        showMessage('fail', 'Each Pi-hole needs a URL (e.g. http://192.168.1.10).');
+        return;
+      }
+      piholes.push({ name: name || `Pi-hole ${piholes.length + 1}`, baseUrl, password });
+    }
+    if (!piholes.length) {
+      showMessage('fail', 'Add at least one Pi-hole (URL and password).');
+      return;
+    }
+    settings.mode = 'direct';
+    settings.piholes = piholes;
+  } else {
+    const url = normalizeUrl(els.backendUrl.value, 'backend');
+    if (url === undefined) return;
+    if (url === null) {
+      showMessage('fail', 'Enter the backend URL (e.g. http://192.168.1.50:8088).');
+      return;
+    }
+    const token = els.controlToken.value.trim();
+    if (!token) {
+      showMessage('fail', 'Enter the control token (CONTROL_TOKEN from the backend .env).');
+      return;
+    }
+    settings.mode = 'backend';
+    settings.backendUrl = url;
+    settings.controlToken = token;
   }
 
-  settings.backendUrl = url;
-  settings.controlToken = token;
-  await browserApi.storage.set({ backendUrl: url, controlToken: token });
-  els.backendUrl.value = url;
+  await browserApi.storage.set({
+    mode: settings.mode,
+    piholes: settings.piholes,
+    backendUrl: settings.backendUrl,
+    controlToken: settings.controlToken,
+  });
+  renderSettingsForm();
   showMessage('ok', 'Settings saved.');
   refreshStatus();
 }
 
 function settingsReady() {
-  if (!settings.backendUrl || !settings.controlToken) {
-    showMessage('fail', 'Welcome! Set the backend URL and control token below to get started.');
+  const ready = settings.mode === 'direct'
+    ? settings.piholes.length > 0
+    : Boolean(settings.backendUrl && settings.controlToken);
+  if (!ready) {
+    showMessage('fail', 'Welcome! Add your Pi-hole below to get started.');
     els.settingsBody.classList.remove('hidden');
-    els.backendUrl.focus();
+    const firstInput = els.piholeList.querySelector('.ph-url');
+    if (settings.mode === 'direct' && firstInput) firstInput.focus();
     return false;
   }
   return true;
 }
 
-// --- backend calls ---------------------------------------------------------
+// --- backend-mode calls ------------------------------------------------------
 
-// Generic call to the backend with a timeout. Returns parsed JSON or throws
-// a clean Error suitable for direct display.
+// Call the backend service with a timeout. Returns parsed JSON or throws a
+// clean Error suitable for direct display.
 async function callBackend(path, method, body) {
   const url = `${settings.backendUrl}${path}`;
   const controller = new AbortController();
@@ -116,7 +251,6 @@ async function callBackend(path, method, body) {
     if (e.name === 'AbortError') {
       throw new Error('Backend timed out. Check that it is running and reachable.');
     }
-    // Network-level failure (backend down, wrong URL, CORS rejection).
     throw new Error('Cannot reach backend. Check the URL and that it is running.');
   } finally {
     clearTimeout(timeout);
@@ -140,6 +274,17 @@ async function callBackend(path, method, body) {
     throw new Error(data.error || `Backend error (HTTP ${res.status}).`);
   }
   return data;
+}
+
+// Route an action through the active mode. Both paths return the same shape:
+// { ok, action, seconds?, results: [...] }.
+async function performAction(action, seconds) {
+  if (settings.mode === 'direct') {
+    return piholeDirect.fanOut(settings.piholes, action, seconds);
+  }
+  if (action === 'status') return callBackend('/api/status', 'GET');
+  if (action === 'disable') return callBackend('/api/disable', 'POST', { seconds });
+  return callBackend('/api/enable', 'POST');
 }
 
 // --- rendering -------------------------------------------------------------
@@ -220,8 +365,7 @@ function renderStatus(results, isCountdownTick) {
 }
 
 // Live countdown: tick every second while any disable timer is running, and
-// re-query the backend once a timer expires so the badge flips back to
-// "Blocking" without a manual refresh.
+// re-query once a timer expires so the badge flips back to "Blocking".
 function startCountdown() {
   stopCountdown();
   if (!lastResults || !lastResults.some((r) => remainingSeconds(r) != null)) return;
@@ -314,7 +458,7 @@ async function refreshStatus() {
   if (!settingsReady()) return;
   setBusy(true, els.refreshBtn, 'Refreshing…');
   try {
-    const data = await callBackend('/api/status', 'GET');
+    const data = await performAction('status');
     renderStatus(data.results);
     els.message.classList.add('hidden');
   } catch (e) {
@@ -330,7 +474,7 @@ async function doDisable(seconds, btn) {
   if (!settingsReady()) return;
   setBusy(true, btn, 'Working…');
   try {
-    const data = await callBackend('/api/disable', 'POST', { seconds });
+    const data = await performAction('disable', seconds);
     renderStatus(data.results);
     summarize(data);
   } catch (e) {
@@ -344,7 +488,7 @@ async function doEnable() {
   if (!settingsReady()) return;
   setBusy(true, els.enableBtn, 'Working…');
   try {
-    const data = await callBackend('/api/enable', 'POST');
+    const data = await performAction('enable');
     renderStatus(data.results);
     summarize(data);
   } catch (e) {
@@ -371,7 +515,16 @@ function init() {
     els.settingsBody.classList.toggle('hidden');
   });
 
-  // Enter in either settings field saves.
+  [els.modeDirect, els.modeBackend].forEach((radio) => {
+    radio.addEventListener('change', applyModeVisibility);
+  });
+
+  els.addPiholeBtn.addEventListener('click', () => {
+    els.piholeList.appendChild(buildPiholeRow(emptyPihole()));
+    renumberPiholeRows();
+  });
+
+  // Enter in backend settings fields saves.
   [els.backendUrl, els.controlToken].forEach((input) => {
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') saveSettings();

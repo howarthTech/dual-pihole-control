@@ -1,28 +1,74 @@
 # Installation
 
-Detailed installation for Windows, Linux, and macOS. For a condensed version
-see [../QUICKSTART.md](../QUICKSTART.md).
+There are two ways to run dual-pihole-control. **Direct mode** needs nothing
+but the extension. **Backend mode** adds a small self-hosted service that
+keeps Pi-hole credentials out of the browser.
 
-## Requirements
+For a condensed version see [../QUICKSTART.md](../QUICKSTART.md).
 
-- **Docker** — Docker Desktop (Windows/macOS) or Docker Engine + Compose plugin
-  (Linux).
-- **One or more Pi-hole servers** reachable on your LAN. Pi-hole **v6** is
-  recommended; v5 has an untested compatibility path.
-- **Firefox** for the browser extension.
+---
 
-## 1. Download the project
+## Part 1 — Install the Firefox extension (both modes)
+
+### From addons.mozilla.org (when listed)
+
+Install "Dual Pi-hole Control" from the Firefox Add-ons store. Installs are
+permanent and update automatically.
+
+### From source (temporary)
+
+1. Download or clone this repository.
+2. Firefox → `about:debugging` → **This Firefox**.
+3. **Load Temporary Add-on…** → select `extension/firefox/manifest.json`.
+
+Temporary add-ons are removed when Firefox restarts; re-load the same way.
+Your settings persist.
+
+---
+
+## Part 2A — Direct mode (recommended, no server)
+
+Requirements: **Pi-hole v6** reachable on your LAN. (Not sure? If
+`http://<pihole-ip>/api/docs` loads, it's v6.)
+
+1. **Create an app password** on each Pi-hole (recommended): Pi-hole admin →
+   **Settings → Web Interface / API → App password**. Copy the generated
+   password. This keeps your real admin password out of the browser and can
+   be revoked anytime.
+2. Click the extension icon → **Settings**. Mode **Direct** is the default.
+3. For each Pi-hole, fill in:
+   - **Name** — a label like `Primary` (optional).
+   - **URL** — e.g. `http://192.168.1.10` (LAN IP; the `http://` is added for
+     you if omitted).
+   - **Password** — the app password (leave blank if the Pi-hole has no web
+     password).
+4. Click **+ Add Pi-hole** to add more, in any number.
+5. **Save Settings**. Status and statistics appear immediately.
+
+Done — skip Part 2B entirely.
+
+---
+
+## Part 2B — Backend mode (Docker)
+
+Choose this if you don't want Pi-hole credentials in browser storage, or you
+run Pi-hole v5.
+
+Requirements: Docker (Docker Desktop on Windows/macOS, Docker Engine +
+Compose on Linux) on a machine that's on when you need the extension.
+
+### 1. Get the config files
+
+Only `docker-compose.yml` and `.env.example` are needed at runtime — the
+backend itself ships as a prebuilt image. Clone the repo (or download those
+two files):
 
 ```
 git clone https://github.com/howarthTech/dual-pihole-control.git
 cd dual-pihole-control
 ```
 
-Or download the ZIP from the project page and extract it.
-
-## 2. Create your configuration
-
-Copy the example environment file:
+### 2. Create your configuration
 
 - **Windows (PowerShell):** `Copy-Item .env.example .env`
 - **Linux / macOS:** `cp .env.example .env`
@@ -46,16 +92,26 @@ Generate a random `CONTROL_TOKEN`:
 > container itself.
 
 **More than one Pi-hole?** Uncomment the `PIHOLE_2_*` block in `.env` (and
-add `PIHOLE_3_*`, `PIHOLE_4_*`, etc. the same way). Every configured Pi-hole
-is picked up automatically and controlled with the same click.
+add `PIHOLE_3_*`, `PIHOLE_4_*`, etc. the same way).
 
-## 3. Start the backend
+### 3. Start the backend
 
 ```
 docker compose up -d
 ```
 
-This builds the image and starts the container. Check it:
+This pulls the prebuilt image `ghcr.io/howarthtech/dual-pihole-control:latest`
+and starts it. Alternatives:
+
+- **Plain `docker run`** (no compose file needed):
+  ```
+  docker run -d --name dual-pihole-control --restart unless-stopped \
+    --env-file .env -p 8088:8088 ghcr.io/howarthtech/dual-pihole-control:latest
+  ```
+- **Build from source:** in `docker-compose.yml`, comment out the `image:`
+  line and uncomment `build: .`, then `docker compose up -d --build`.
+
+Check it:
 
 ```
 curl http://localhost:8088/health
@@ -76,52 +132,36 @@ the backend host:
 
 Then test from the other PC: `curl http://<server-lan-ip>:8088/health`.
 
-## 4. Install the Firefox extension
-
-1. Open Firefox → `about:debugging`.
-2. Click **This Firefox**.
-3. Click **Load Temporary Add-on…**.
-4. Select `extension/firefox/manifest.json`.
-
-Temporary add-ons are removed when Firefox restarts; re-load the same way.
-
-## 5. Configure the extension
+### 4. Configure the extension
 
 Open the popup → **Settings**:
 
-- **Backend URL** — `http://<server-lan-ip>:8088` (use `localhost` only if the
-  browser is on the same machine as the backend).
+- Mode: **Backend service**.
+- **Backend URL** — `http://<server-lan-ip>:8088` (use `localhost` only if
+  the browser is on the same machine as the backend).
 - **Control Token** — the same `CONTROL_TOKEN` you put in `.env`.
 - Click **Save Settings**.
 
-## 6. Verify
+---
 
-Click **Disable 5m** in the popup, then check both Pi-hole admin dashboards —
-they should show blocking disabled with a countdown. Click **Enable Now** to
-restore blocking.
+## Verify (both modes)
+
+Click **Disable 5m** in the popup, then check your Pi-hole admin dashboard —
+it should show blocking disabled with a countdown. The popup counts down live
+and flips back to "Blocking" when the timer expires. Click **Enable Now** to
+restore blocking early.
 
 ## Updating
 
-After changing `.env`:
-
-```
-docker compose up -d --force-recreate
-```
-
-After updating the code:
-
-```
-docker compose up -d --build
-```
+- **Extension:** store installs update automatically; temporary loads — pull
+  the repo and re-load.
+- **Backend image:** `docker compose pull && docker compose up -d`
+- **After `.env` changes:** `docker compose up -d --force-recreate`
 
 ## Uninstalling
 
-```
-docker compose down
-```
-
-Remove the temporary add-on from `about:debugging`, and delete the project
-folder.
+- Direct mode: remove the extension (Firefox → Add-ons) — settings go with it.
+- Backend mode: also `docker compose down` and delete the folder.
 
 ## Troubleshooting
 

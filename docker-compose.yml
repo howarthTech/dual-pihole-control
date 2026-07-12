@@ -3,7 +3,10 @@
 #   docker compose up -d
 services:
   backend:
-    build: .
+    # Prebuilt image from GitHub Container Registry - no clone/build needed.
+    image: ghcr.io/howarthtech/dual-pihole-control:latest
+    # Building from source instead? Comment out "image:" above and uncomment:
+    # build: .
     container_name: dual-pihole-control
     restart: unless-stopped
     # Reads all configuration (token, Pi-hole URLs, passwords) from .env.

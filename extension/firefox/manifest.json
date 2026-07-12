@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Dual Pi-hole Control",
-  "version": "0.3.0",
-  "description": "One-click disable/enable blocking on one or more Pi-hole servers via a local backend service.",
+  "version": "0.4.0",
+  "description": "One-click disable/enable blocking on one or more Pi-hole servers. Connects to Pi-hole v6 directly, or through an optional self-hosted backend.",
   "author": "Howarth Tech Solutions",
   "homepage_url": "https://github.com/howarthTech/dual-pihole-control",
   "browser_specific_settings": {

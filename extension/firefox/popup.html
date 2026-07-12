@@ -11,7 +11,7 @@
       <img src="icon.svg" alt="" class="logo" />
       <h1>Dual Pi-hole Control</h1>
     </div>
-    <span class="version">v0.3.0</span>
+    <span class="version">v0.4.0</span>
   </header>
 
   <!-- Per-server status -->
@@ -41,15 +41,42 @@
   <section class="settings">
     <button class="settings-toggle" id="settingsToggle">Settings &#9662;</button>
     <div class="settings-body hidden" id="settingsBody">
-      <label for="backendUrl">Backend URL</label>
-      <input type="text" id="backendUrl" placeholder="http://192.168.1.50:8088"
-             autocomplete="off" spellcheck="false" />
 
-      <label for="controlToken">Control Token</label>
-      <div class="token-row">
-        <input type="password" id="controlToken" placeholder="CONTROL_TOKEN"
+      <label>Connection mode</label>
+      <div class="mode-row">
+        <label class="mode-option">
+          <input type="radio" name="mode" value="direct" id="modeDirect" />
+          Direct
+        </label>
+        <label class="mode-option">
+          <input type="radio" name="mode" value="backend" id="modeBackend" />
+          Backend service
+        </label>
+      </div>
+
+      <!-- Direct mode: manage Pi-holes right here -->
+      <div id="directSettings">
+        <div id="piholeList"></div>
+        <button class="btn ghost full" id="addPiholeBtn" type="button">+ Add Pi-hole</button>
+        <p class="hint">
+          Tip: create an <strong>app password</strong> in Pi-hole
+          (Settings &rarr; Web Interface / API) instead of using your admin
+          password. Direct mode requires Pi-hole v6.
+        </p>
+      </div>
+
+      <!-- Backend mode: the companion backend service -->
+      <div id="backendSettings" class="hidden">
+        <label for="backendUrl">Backend URL</label>
+        <input type="text" id="backendUrl" placeholder="http://192.168.1.50:8088"
                autocomplete="off" spellcheck="false" />
-        <button class="btn ghost" id="tokenVisibilityBtn" type="button">Show</button>
+
+        <label for="controlToken">Control Token</label>
+        <div class="token-row">
+          <input type="password" id="controlToken" placeholder="CONTROL_TOKEN"
+                 autocomplete="off" spellcheck="false" />
+          <button class="btn ghost" id="tokenVisibilityBtn" type="button">Show</button>
+        </div>
       </div>
 
       <button class="btn save" id="saveSettingsBtn">Save Settings</button>
@@ -64,6 +91,7 @@
   </footer>
 
   <script src="browserApi.js"></script>
+  <script src="piholeDirect.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>
