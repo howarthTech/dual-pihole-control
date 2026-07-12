@@ -386,7 +386,7 @@ function init() {
   });
 
   // Support link: popups can't reliably follow plain links, so open a tab.
-  document.getElementById('coffeeLink').addEventListener('click', (e) => {
+  document.getElementById('supportLink').addEventListener('click', (e) => {
     e.preventDefault();
     browserApi.openTab(e.currentTarget.href).then(() => window.close());
   });

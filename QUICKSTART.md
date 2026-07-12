@@ -6,7 +6,7 @@ The fastest path to a working setup. For detailed steps see
 ## Prerequisites
 
 - Docker (Docker Desktop on Windows/macOS, Docker Engine on Linux).
-- Two Pi-hole servers reachable on your LAN (v6 recommended).
+- One or more Pi-hole servers reachable on your LAN (v6 recommended).
 - Firefox.
 
 ## 1. Get the project
@@ -27,8 +27,11 @@ cp .env.example .env
 
 Edit `.env` and set:
 - `CONTROL_TOKEN` — any long random string.
-- `PIHOLE_1_BASE_URL` / `PIHOLE_1_PASSWORD` — your first Pi-hole.
-- `PIHOLE_2_BASE_URL` / `PIHOLE_2_PASSWORD` — your second Pi-hole.
+- `PIHOLE_1_BASE_URL` / `PIHOLE_1_PASSWORD` — your Pi-hole.
+
+Have more than one Pi-hole? Uncomment the `PIHOLE_2_*` block (and add
+`PIHOLE_3_*`, `PIHOLE_4_*`, ... the same way) — they are picked up
+automatically.
 
 Use real **LAN IP addresses**, not `127.0.0.1`.
 

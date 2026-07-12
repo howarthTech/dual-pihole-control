@@ -7,8 +7,8 @@ see [../QUICKSTART.md](../QUICKSTART.md).
 
 - **Docker** — Docker Desktop (Windows/macOS) or Docker Engine + Compose plugin
   (Linux).
-- **Two Pi-hole servers** reachable on your LAN. Pi-hole **v6** is recommended;
-  v5 has an untested compatibility path.
+- **One or more Pi-hole servers** reachable on your LAN. Pi-hole **v6** is
+  recommended; v5 has an untested compatibility path.
 - **Firefox** for the browser extension.
 
 ## 1. Download the project
@@ -33,10 +33,8 @@ Edit `.env`:
 |----------|--------|
 | `PORT` | Backend port (default `8088`). |
 | `CONTROL_TOKEN` | A long random string you invent. |
-| `PIHOLE_1_BASE_URL` | First Pi-hole's LAN URL, e.g. `http://192.168.1.10`. |
-| `PIHOLE_1_PASSWORD` | First Pi-hole's admin/web password. |
-| `PIHOLE_2_BASE_URL` | Second Pi-hole's LAN URL. |
-| `PIHOLE_2_PASSWORD` | Second Pi-hole's admin/web password. |
+| `PIHOLE_1_BASE_URL` | Your Pi-hole's LAN URL, e.g. `http://192.168.1.10`. |
+| `PIHOLE_1_PASSWORD` | Your Pi-hole's admin/web password. |
 
 Generate a random `CONTROL_TOKEN`:
 
@@ -47,7 +45,9 @@ Generate a random `CONTROL_TOKEN`:
 > `127.0.0.1` — the backend runs inside a container, where `127.0.0.1` is the
 > container itself.
 
-To control more than two Pi-holes, add `PIHOLE_3_*`, `PIHOLE_4_*`, etc.
+**More than one Pi-hole?** Uncomment the `PIHOLE_2_*` block in `.env` (and
+add `PIHOLE_3_*`, `PIHOLE_4_*`, etc. the same way). Every configured Pi-hole
+is picked up automatically and controlled with the same click.
 
 ## 3. Start the backend
 

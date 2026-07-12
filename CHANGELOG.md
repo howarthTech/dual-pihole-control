@@ -5,6 +5,17 @@ All notable changes to this project are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] - 2026-07-12
+
+### Changed
+- Any number of Pi-holes is now the documented default: `.env.example` ships
+  with a single Pi-hole configured and a commented template for adding more
+  (`PIHOLE_2_*`, `PIHOLE_3_*`, ...). The backend and popup always supported
+  N servers; docs and defaults now match.
+- "Buy me a coffee" footer link is now "🍕 Buy me a slice".
+- Wording across README/QUICKSTART/INSTALL updated from "two Pi-holes" to
+  "one or more Pi-holes".
+
 ## [0.2.1] - 2026-07-12
 
 ### Added

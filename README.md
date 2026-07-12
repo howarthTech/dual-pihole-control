@@ -1,11 +1,11 @@
 # dual-pihole-control
 
-**Version: v0.2.1**
+**Version: v0.3.0**
 
-One-click control of **two Pi-hole servers at once** from a Firefox browser
-extension. Click a button in your browser to disable blocking on both your
-Primary and Secondary Pi-hole for a chosen duration — no more logging into two
-admin dashboards.
+One-click control of **all your Pi-hole servers at once** — one, two, or many —
+from a Firefox browser extension. Click a button in your browser to disable
+blocking on every Pi-hole for a chosen duration — no more logging into each
+admin dashboard separately.
 
 ![Dual Pi-hole Control popup](docs/images/popup.png)
 

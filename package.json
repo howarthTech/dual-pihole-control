@@ -1,7 +1,7 @@
 {
   "name": "dual-pihole-control",
-  "version": "0.2.1",
-  "description": "Backend service to disable/enable blocking on two Pi-hole servers at once, controlled by a browser extension.",
+  "version": "0.3.0",
+  "description": "Backend service to disable/enable blocking on one or more Pi-hole servers at once, controlled by a browser extension.",
   "main": "src/server.js",
   "type": "commonjs",
   "scripts": {
