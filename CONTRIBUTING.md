@@ -23,6 +23,14 @@ npm install
 npm start
 ```
 
+## Automated tests
+
+Run `npm test` after installing dependencies with `npm ci` (Node.js 18+).
+Tests use the built-in `node:test` runner with no additional dependencies.
+The Pi-hole client tests replace HTTP calls with fake responses; they need no
+running server, `.env` file, or real credentials. Live Pi-hole compatibility
+still requires manual verification.
+
 ## Guidelines
 
 - Keep it simple — no TypeScript, no database, no cloud services, and avoid
@@ -31,7 +39,7 @@ npm start
 - Never log or return secrets (Pi-hole passwords, control token).
 - Do not commit a `.env` file. Only `.env.example` belongs in the repo.
 - Test against a real Pi-hole v6 server when changing API behavior.
-- The Pi-hole v5 path is currently untested — verification PRs are welcome.
+- The Pi-hole v5 path has mocked unit coverage; live verification is welcome.
 
 ## Pull requests
 
